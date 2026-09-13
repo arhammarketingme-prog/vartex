@@ -1130,6 +1130,30 @@
 </main>
 
 <!-- ============ ONBOARDING (shown once after signup) ============ -->
+<div id="passphrase-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(11,17,32,0.97);z-index:210;overflow-y:auto">
+  <div class="profilewrap" style="max-width:440px">
+    <div class="card">
+      <div id="passphrase-mode-setup">
+        <h3 style="margin-top:0">Set up your message passphrase</h3>
+        <p style="color:var(--paper-dim);font-size:0.85rem">This lets you read your messages from any device — phone, laptop, wherever you log in. Only you know it; Vartex never sees it or stores it anywhere.</p>
+        <div class="field"><label for="pp-setup-1">Choose a passphrase</label><input type="password" id="pp-setup-1" autocomplete="new-password"></div>
+        <div class="field"><label for="pp-setup-2">Type it again</label><input type="password" id="pp-setup-2" autocomplete="new-password"></div>
+        <p style="color:var(--paper-dim);font-size:0.78rem"><strong>If you forget this, older messages can't be recovered</strong> — there's no reset that doesn't involve losing them, because that's what keeping the server unable to read your messages actually means in practice.</p>
+        <div id="passphrase-setup-msg"></div>
+        <button class="btn btn-solid" id="btn-passphrase-setup-continue" style="width:100%">Continue</button>
+      </div>
+      <div id="passphrase-mode-unlock" class="hidden">
+        <h3 style="margin-top:0">Unlock your messages</h3>
+        <p style="color:var(--paper-dim);font-size:0.85rem">Enter your message passphrase to read your messages on this device.</p>
+        <div class="field"><label for="pp-unlock-input">Passphrase</label><input type="password" id="pp-unlock-input" autocomplete="current-password"></div>
+        <div id="passphrase-unlock-msg"></div>
+        <button class="btn btn-solid" id="btn-passphrase-unlock" style="width:100%">Unlock</button>
+        <p style="text-align:center;margin-top:14px"><button class="btn" id="btn-passphrase-forgot" style="font-size:0.8rem">I forgot it — start fresh on this device</button></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="people-list-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(11,17,32,0.95);z-index:200;overflow-y:auto">
   <div class="profilewrap" style="max-width:480px">
     <button class="btn" id="btn-close-people-list">← Back</button>
@@ -3185,24 +3209,99 @@ const PRIVKEY_STORAGE_PREFIX = 'vartex_privkey_';
 function ab2b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
 function b642ab(b64){ const bin = atob(b64); const buf = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i); return buf.buffer; }
 
+/* ---- passphrase-based wrapping, so the SAME private key can be
+   recovered on any device, without the server ever seeing the
+   passphrase or the unwrapped key ---- */
+async function deriveWrapKey(passphrase, saltB64){
+  const salt = saltB64 ? new Uint8Array(b642ab(saltB64)) : crypto.getRandomValues(new Uint8Array(16));
+  const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt']
+  );
+  return { key, saltB64: ab2b64(salt.buffer) };
+}
+
+async function wrapPrivateKeyForBackup(privateJwk, passphrase){
+  const { key, saltB64 } = await deriveWrapKey(passphrase);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(privateJwk)));
+  return { encrypted_private_key: ab2b64(ciphertext), key_wrap_iv: ab2b64(iv.buffer), key_wrap_salt: saltB64 };
+}
+
+async function unwrapPrivateKeyFromBackup(backup, passphrase){
+  const { key } = await deriveWrapKey(passphrase, backup.key_wrap_salt);
+  const plaintextBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(b642ab(backup.key_wrap_iv)) }, key, b642ab(backup.encrypted_private_key));
+  return JSON.parse(new TextDecoder().decode(plaintextBuf));
+}
+
+function askPassphrase(mode){
+  // mode: 'setup' (choose + confirm a new one) or 'unlock' (enter existing)
+  return new Promise((resolve) => {
+    show($('passphrase-overlay'));
+    $('passphrase-mode-setup').classList.toggle('hidden', mode !== 'setup');
+    $('passphrase-mode-unlock').classList.toggle('hidden', mode !== 'unlock');
+    clearFlash('passphrase-setup-msg'); clearFlash('passphrase-unlock-msg');
+    $('pp-setup-1').value = ''; $('pp-setup-2').value = ''; $('pp-unlock-input').value = '';
+
+    const finish = (result) => { hide($('passphrase-overlay')); resolve(result); };
+
+    if (mode === 'setup'){
+      $('btn-passphrase-setup-continue').onclick = () => {
+        const a = $('pp-setup-1').value, b = $('pp-setup-2').value;
+        if (!a || a.length < 6){ flash('passphrase-setup-msg', 'Use at least 6 characters.', 'error'); return; }
+        if (a !== b){ flash('passphrase-setup-msg', 'Those don\'t match — try again.', 'error'); return; }
+        finish(a);
+      };
+    } else {
+      $('btn-passphrase-unlock').onclick = async () => {
+        const val = $('pp-unlock-input').value;
+        if (!val){ flash('passphrase-unlock-msg', 'Enter your passphrase.', 'error'); return; }
+        finish(val);
+      };
+      $('btn-passphrase-forgot').onclick = () => finish('__FORGOT__');
+    }
+  });
+}
+
 async function ensureKeypair(){
   if (!currentUser) return null;
+
   const stored = localStorage.getItem(PRIVKEY_STORAGE_PREFIX + currentUser.id);
   if (stored){
     const jwk = JSON.parse(stored);
     const privateKey = await crypto.subtle.importKey('jwk', jwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
     return { privateKey };
   }
-  // No local key on this device — set one up automatically, the same
-  // way any ordinary messaging app does on a new device. No prompts,
-  // no technical language. (Trade-off, kept invisible on purpose:
-  // messages sent to a previous key on another device won't be
-  // readable here — this is how the linked-only-to-this-device
-  // trust model works, without exposing it to the person using it.)
-  return await generateAndStoreKeypair();
+
+  // no local key on THIS device — try to recover the real key from
+  // the encrypted backup, so messages read the same everywhere
+  const { data: backup } = await sb.from('user_key_backups').select('*').eq('user_id', currentUser.id).maybeSingle();
+
+  if (backup){
+    while (true){
+      const passphrase = await askPassphrase('unlock');
+      if (passphrase === '__FORGOT__'){
+        return await generateAndStoreKeypair(true); // deliberate fresh start, same old trade-off, but now it's an informed choice
+      }
+      try {
+        const privateJwk = await unwrapPrivateKeyFromBackup(backup, passphrase);
+        const privateKey = await crypto.subtle.importKey('jwk', privateJwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
+        localStorage.setItem(PRIVKEY_STORAGE_PREFIX + currentUser.id, JSON.stringify(privateJwk));
+        return { privateKey };
+      } catch(e){
+        alert('That passphrase didn\'t work — try again.');
+      }
+    }
+  }
+
+  // first time ever setting up messaging for this account — generate
+  // a key AND ask them to set a passphrase, so every device after
+  // this one just works
+  return await generateAndStoreKeypair(false);
 }
 
-async function generateAndStoreKeypair(){
+async function generateAndStoreKeypair(skipBackup){
   const keyPair = await crypto.subtle.generateKey(
     { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' },
     true, ['encrypt','decrypt']
@@ -3211,6 +3310,13 @@ async function generateAndStoreKeypair(){
   const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
   localStorage.setItem(PRIVKEY_STORAGE_PREFIX + currentUser.id, JSON.stringify(privateJwk));
   await sb.from('profiles').update({ public_key: JSON.stringify(publicJwk) }).eq('id', currentUser.id);
+
+  if (!skipBackup){
+    const passphrase = await askPassphrase('setup');
+    const wrapped = await wrapPrivateKeyForBackup(privateJwk, passphrase);
+    await sb.from('user_key_backups').upsert({ user_id: currentUser.id, ...wrapped });
+  }
+
   return { privateKey: keyPair.privateKey };
 }
 

@@ -917,3 +917,46 @@ Only `index.html` and `sw.js` changed. No SQL.
    should get it within moments of reopening it — no more manual
    cache-clearing needed for ordinary content updates (that was only ever
    necessary for the one-time icon fix).
+
+## Phase 26 — the real fix: messages now follow the account, not the device
+
+This replaces the Phase 25 "silently generate a new key" behavior with
+something that actually solves what you asked for: log in as the same
+person on any phone, laptop, or browser, and your messages are readable
+there — not just going forward, but your existing ones too, as long as
+the device that receives them has been unlocked with your passphrase at
+least once. Run `supabase/schema_phase21.sql` after phase 20. Only
+`index.html` changed besides that.
+
+**How it actually works**, in plain terms: the very first time you ever
+open Messages, you choose a passphrase (separate from your login
+password — only ever typed into your browser, never sent anywhere in
+readable form). Your messaging key gets locked with that passphrase and
+the locked (still-unreadable-without-it) version is saved to your
+account. Any other device, the first time it needs your key, asks for
+that same passphrase, unlocks the key locally in the browser, and from
+then on that device just works silently too — same as the first one.
+
+**Why this is genuinely still end-to-end encrypted, not a workaround**:
+the server only ever stores your key in its locked form. Nobody — not an
+admin, not a database breach, not me — can open it without your
+passphrase, because the passphrase itself never leaves your browser (the
+unlocking happens on your device, using standard PBKDF2 + AES-GCM, the
+same category of technique Signal and iCloud Keychain use for exactly
+this problem).
+
+**The one honest trade-off, same as before, just now a deliberate choice
+instead of an invisible default**: if you forget that passphrase, there
+truly is no way to recover older messages — not because of a limitation
+I could patch, but because a recoverable-without-the-passphrase backup
+would mean the server *could* read your messages, which defeats the
+entire point. "I forgot it — start fresh" is offered as an explicit,
+honest way out when that happens, same as Signal's own PIN-reset flow.
+
+**What this does NOT yet cover**: anyone who already generated a key
+under the old, un-backed-up system (including your own test account from
+the last few days) has no backup on file — the next time messaging is
+opened on any device without a local key, it'll go through the "set up
+your message passphrase" flow as if for the first time, same as a brand
+new account. That's expected, not a bug — there was nothing to back up
+before now.
