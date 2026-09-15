@@ -436,7 +436,7 @@
   <section class="panel">
     <div class="card">
       <h3 style="margin-top:0">This is Phase 4</h3>
-      <p style="color:var(--paper-dim)">Foundation + feed/communities/polls/notifications + the demo seed ecosystem are live. YouTube discovery, the Earn Center, advertising, E2E messaging and moderation ship in later phases on top of this base.</p>
+      <p style="color:var(--paper-dim)">Foundation + feed/communities/polls/notifications + the demo seed ecosystem are live. YouTube discovery, the Earn Center, advertising, private messaging and moderation ship in later phases on top of this base.</p>
     </div>
   </section>
 </main>
@@ -859,7 +859,7 @@
   <!-- ---- MESSAGES TAB (E2E) ---- -->
   <div id="tab-messages" class="tabpanel profilewrap hidden">
     <p style="color:var(--paper-dim);font-size:0.82rem;margin-top:0">
-      Messages are end-to-end encrypted in your browser before they're sent — the server only ever stores ciphertext. See the <a href="#" id="msg-privacy-link" style="color:var(--teal)">Privacy Center</a> for details.
+      Messages are private between you and the other person — protected the same way as everything else in your account, not stored in plaintext where other users could ever see it. See the <a href="#" id="msg-privacy-link" style="color:var(--teal)">Privacy Center</a> for details.
     </p>
 
     <div id="msg-conversation-view" class="hidden">
@@ -1024,19 +1024,19 @@
     </div>
 
     <div class="card" style="margin-bottom:16px">
-      <h3 style="margin-top:0">What's encrypted</h3>
-      <p style="font-size:0.9rem">Direct messages are encrypted in your browser (AES-GCM, with the key wrapped for each recipient using RSA-OAEP) before they ever leave your device. The server stores only ciphertext — Vartex staff cannot read your message contents.</p>
-      <p style="font-size:0.85rem;color:var(--paper-dim)">Honest limitation: your private key currently lives only in this browser's local storage. If you clear browser data or switch devices without backing it up, you'll lose access to old messages. There's no server-side password recovery for this, by design — that's what "the server never sees plaintext" means in practice.</p>
+      <h3 style="margin-top:0">Direct messages — how they're actually protected</h3>
+      <p style="font-size:0.9rem">Messages are <strong>not end-to-end encrypted</strong>. They're stored on the server and protected by access control: only the sender and the recipient of a message can ever retrieve it through the app — no other user can read someone else's conversation. This is the same model most mainstream chat apps' standard (non-"secret") conversations use.</p>
+      <p style="font-size:0.85rem;color:var(--paper-dim)">In plain terms: a Vartex admin with direct database access, or anyone who compromised the database itself, could technically read message content — the app's access control, not encryption, is what keeps everyone else out. Messages do travel encrypted in transit (HTTPS), same as everything else on this site. We chose this over end-to-end encryption deliberately, so that messages are readable immediately on any device you log in from, without a passphrase or device-linking step.</p>
     </div>
 
     <div class="card" style="margin-bottom:16px">
       <h3 style="margin-top:0">What's NOT stored</h3>
-      <p style="font-size:0.9rem">We don't store plaintext message contents, and we practice data minimization elsewhere too — no invasive location tracking, no third-party ad trackers embedded in the page.</p>
+      <p style="font-size:0.9rem">We practice data minimization outside of messages — no invasive location tracking, no third-party ad trackers embedded in the page, media (photos/videos) is hosted externally rather than piling up in our own database.</p>
     </div>
 
     <div class="card" style="margin-bottom:16px">
       <h3 style="margin-top:0">What we don't claim</h3>
-      <p style="font-size:0.9rem">Vartex is privacy-first, not a legal guarantee. We don't claim to be "legally certified," and we don't claim "100% anonymity" — your account is tied to your email, and public content is, well, public.</p>
+      <p style="font-size:0.9rem">Vartex is privacy-first in its overall design (data minimization, transparent moderation, no ad-targeting on private content), not a claim of zero-knowledge encryption everywhere. We don't claim messages are end-to-end encrypted, we don't claim to be "legally certified," and we don't claim "100% anonymity" — your account is tied to your email, and public content is, well, public.</p>
     </div>
 
     <div class="card">
@@ -1130,30 +1130,6 @@
 </main>
 
 <!-- ============ ONBOARDING (shown once after signup) ============ -->
-<div id="passphrase-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(11,17,32,0.97);z-index:210;overflow-y:auto">
-  <div class="profilewrap" style="max-width:440px">
-    <div class="card">
-      <div id="passphrase-mode-setup">
-        <h3 style="margin-top:0">Set up your message passphrase</h3>
-        <p style="color:var(--paper-dim);font-size:0.85rem">This lets you read your messages from any device — phone, laptop, wherever you log in. Only you know it; Vartex never sees it or stores it anywhere.</p>
-        <div class="field"><label for="pp-setup-1">Choose a passphrase</label><input type="password" id="pp-setup-1" autocomplete="new-password"></div>
-        <div class="field"><label for="pp-setup-2">Type it again</label><input type="password" id="pp-setup-2" autocomplete="new-password"></div>
-        <p style="color:var(--paper-dim);font-size:0.78rem"><strong>If you forget this, older messages can't be recovered</strong> — there's no reset that doesn't involve losing them, because that's what keeping the server unable to read your messages actually means in practice.</p>
-        <div id="passphrase-setup-msg"></div>
-        <button class="btn btn-solid" id="btn-passphrase-setup-continue" style="width:100%">Continue</button>
-      </div>
-      <div id="passphrase-mode-unlock" class="hidden">
-        <h3 style="margin-top:0">Unlock your messages</h3>
-        <p style="color:var(--paper-dim);font-size:0.85rem">Enter your message passphrase to read your messages on this device.</p>
-        <div class="field"><label for="pp-unlock-input">Passphrase</label><input type="password" id="pp-unlock-input" autocomplete="current-password"></div>
-        <div id="passphrase-unlock-msg"></div>
-        <button class="btn btn-solid" id="btn-passphrase-unlock" style="width:100%">Unlock</button>
-        <p style="text-align:center;margin-top:14px"><button class="btn" id="btn-passphrase-forgot" style="font-size:0.8rem">I forgot it — start fresh on this device</button></p>
-      </div>
-    </div>
-  </div>
-</div>
-
 <div id="people-list-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(11,17,32,0.95);z-index:200;overflow-y:auto">
   <div class="profilewrap" style="max-width:480px">
     <button class="btn" id="btn-close-people-list">← Back</button>
@@ -1367,7 +1343,7 @@ async function openPublicProfile(userId){
         followBtn.classList.add('is-following'); followBtn.textContent = 'Following';
       }
     };
-    $('pp-message-btn').onclick = async () => { showView('app'); showTab('messages'); await openMessagesTab(); if (myKeyHandle) openConversation(userId); };
+    $('pp-message-btn').onclick = async () => { showView('app'); showTab('messages'); await openMessagesTab(); openConversation(userId); };
     $('pp-report-btn').onclick = async () => {
       const reason = prompt('Why are you reporting this account?');
       if (!reason || !reason.trim()) return;
@@ -2827,7 +2803,7 @@ async function runSearch(){
     btn.addEventListener('click', async () => {
       showTab('messages');
       await openMessagesTab();
-      if (myKeyHandle) openConversation(btn.dataset.userId);
+      openConversation(btn.dataset.userId);
     });
   });
   document.querySelectorAll('#search-results .view-profile-trigger').forEach(el => {
@@ -2887,7 +2863,7 @@ async function loadNotifications(){
     el.addEventListener('click', async () => {
       showTab('messages');
       await openMessagesTab();
-      if (myKeyHandle) openConversation(el.dataset.openChatWith);
+      openConversation(el.dataset.openChatWith);
     });
   });
 
@@ -3206,158 +3182,6 @@ async function fundCampaign(campaignId, btn){
 // sees it, and there is no server-side recovery (see Privacy Center).
 const PRIVKEY_STORAGE_PREFIX = 'vartex_privkey_';
 
-function ab2b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-function b642ab(b64){ const bin = atob(b64); const buf = new Uint8Array(bin.length); for (let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i); return buf.buffer; }
-
-/* ---- passphrase-based wrapping, so the SAME private key can be
-   recovered on any device, without the server ever seeing the
-   passphrase or the unwrapped key ---- */
-async function deriveWrapKey(passphrase, saltB64){
-  const salt = saltB64 ? new Uint8Array(b642ab(saltB64)) : crypto.getRandomValues(new Uint8Array(16));
-  const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
-  const key = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt','decrypt']
-  );
-  return { key, saltB64: ab2b64(salt.buffer) };
-}
-
-async function wrapPrivateKeyForBackup(privateJwk, passphrase){
-  const { key, saltB64 } = await deriveWrapKey(passphrase);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(privateJwk)));
-  return { encrypted_private_key: ab2b64(ciphertext), key_wrap_iv: ab2b64(iv.buffer), key_wrap_salt: saltB64 };
-}
-
-async function unwrapPrivateKeyFromBackup(backup, passphrase){
-  const { key } = await deriveWrapKey(passphrase, backup.key_wrap_salt);
-  const plaintextBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(b642ab(backup.key_wrap_iv)) }, key, b642ab(backup.encrypted_private_key));
-  return JSON.parse(new TextDecoder().decode(plaintextBuf));
-}
-
-function askPassphrase(mode){
-  // mode: 'setup' (choose + confirm a new one) or 'unlock' (enter existing)
-  return new Promise((resolve) => {
-    show($('passphrase-overlay'));
-    $('passphrase-mode-setup').classList.toggle('hidden', mode !== 'setup');
-    $('passphrase-mode-unlock').classList.toggle('hidden', mode !== 'unlock');
-    clearFlash('passphrase-setup-msg'); clearFlash('passphrase-unlock-msg');
-    $('pp-setup-1').value = ''; $('pp-setup-2').value = ''; $('pp-unlock-input').value = '';
-
-    const finish = (result) => { hide($('passphrase-overlay')); resolve(result); };
-
-    if (mode === 'setup'){
-      $('btn-passphrase-setup-continue').onclick = () => {
-        const a = $('pp-setup-1').value, b = $('pp-setup-2').value;
-        if (!a || a.length < 6){ flash('passphrase-setup-msg', 'Use at least 6 characters.', 'error'); return; }
-        if (a !== b){ flash('passphrase-setup-msg', 'Those don\'t match — try again.', 'error'); return; }
-        finish(a);
-      };
-    } else {
-      $('btn-passphrase-unlock').onclick = async () => {
-        const val = $('pp-unlock-input').value;
-        if (!val){ flash('passphrase-unlock-msg', 'Enter your passphrase.', 'error'); return; }
-        finish(val);
-      };
-      $('btn-passphrase-forgot').onclick = () => finish('__FORGOT__');
-    }
-  });
-}
-
-async function ensureKeypair(){
-  if (!currentUser) return null;
-
-  const stored = localStorage.getItem(PRIVKEY_STORAGE_PREFIX + currentUser.id);
-  if (stored){
-    const jwk = JSON.parse(stored);
-    const privateKey = await crypto.subtle.importKey('jwk', jwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
-    return { privateKey };
-  }
-
-  // no local key on THIS device — try to recover the real key from
-  // the encrypted backup, so messages read the same everywhere
-  const { data: backup } = await sb.from('user_key_backups').select('*').eq('user_id', currentUser.id).maybeSingle();
-
-  if (backup){
-    while (true){
-      const passphrase = await askPassphrase('unlock');
-      if (passphrase === '__FORGOT__'){
-        return await generateAndStoreKeypair(true); // deliberate fresh start, same old trade-off, but now it's an informed choice
-      }
-      try {
-        const privateJwk = await unwrapPrivateKeyFromBackup(backup, passphrase);
-        const privateKey = await crypto.subtle.importKey('jwk', privateJwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['decrypt']);
-        localStorage.setItem(PRIVKEY_STORAGE_PREFIX + currentUser.id, JSON.stringify(privateJwk));
-        return { privateKey };
-      } catch(e){
-        alert('That passphrase didn\'t work — try again.');
-      }
-    }
-  }
-
-  // first time ever setting up messaging for this account — generate
-  // a key AND ask them to set a passphrase, so every device after
-  // this one just works
-  return await generateAndStoreKeypair(false);
-}
-
-async function generateAndStoreKeypair(skipBackup){
-  const keyPair = await crypto.subtle.generateKey(
-    { name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1,0,1]), hash: 'SHA-256' },
-    true, ['encrypt','decrypt']
-  );
-  const privateJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-  const publicJwk = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-  localStorage.setItem(PRIVKEY_STORAGE_PREFIX + currentUser.id, JSON.stringify(privateJwk));
-  await sb.from('profiles').update({ public_key: JSON.stringify(publicJwk) }).eq('id', currentUser.id);
-
-  if (!skipBackup){
-    const passphrase = await askPassphrase('setup');
-    const wrapped = await wrapPrivateKeyForBackup(privateJwk, passphrase);
-    await sb.from('user_key_backups').upsert({ user_id: currentUser.id, ...wrapped });
-  }
-
-  return { privateKey: keyPair.privateKey };
-}
-
-async function importPublicKey(jwkJson){
-  const jwk = JSON.parse(jwkJson);
-  return await crypto.subtle.importKey('jwk', jwk, { name: 'RSA-OAEP', hash: 'SHA-256' }, true, ['encrypt']);
-}
-
-async function encryptMessage(plaintext, recipientPublicKeyJwk, senderPublicKeyJwk){
-  const aesKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const enc = new TextEncoder();
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, aesKey, enc.encode(plaintext));
-  const rawAesKey = await crypto.subtle.exportKey('raw', aesKey);
-
-  const recipientPub = await importPublicKey(recipientPublicKeyJwk);
-  const senderPub = await importPublicKey(senderPublicKeyJwk);
-  const keyForRecipient = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, recipientPub, rawAesKey);
-  const keyForSender = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, senderPub, rawAesKey);
-
-  return {
-    ciphertext: ab2b64(ciphertext),
-    iv: ab2b64(iv.buffer),
-    key_for_recipient: ab2b64(keyForRecipient),
-    key_for_sender: ab2b64(keyForSender)
-  };
-}
-
-async function decryptMessage(row, myPrivateKey, isSender){
-  try {
-    const wrappedKey = isSender ? row.key_for_sender : row.key_for_recipient;
-    const rawAesKey = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, myPrivateKey, b642ab(wrappedKey));
-    const aesKey = await crypto.subtle.importKey('raw', rawAesKey, { name: 'AES-GCM' }, false, ['decrypt']);
-    const plaintextBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(b642ab(row.iv)) }, aesKey, b642ab(row.ciphertext));
-    return new TextDecoder().decode(plaintextBuf);
-  } catch(e){
-    return '[Could not decrypt — this message was likely sent to a different device key]';
-  }
-}
-
-let myKeyHandle = null;
 let currentConversationPartner = null;
 
 async function openMessagesTab(){
@@ -3365,35 +3189,31 @@ async function openMessagesTab(){
   hide($('group-conversation-view'));
   show($('msg-conversations-list-wrap'));
 
-  const keyResult = await ensureKeypair();
-  if (!keyResult) return;
-  myKeyHandle = keyResult.privateKey;
-
   await loadConversations();
   await loadGroups();
 }
 
-/* ---- group chat (fixed-membership E2EE) ---- */
+/* ---- group chat (fixed membership per group) ---- */
 async function loadGroups(){
   if (!currentUser) return;
-  const { data: memberships } = await sb.from('chat_group_members').select('group_id, wrapped_key, chat_groups(id, name, creator_id)').eq('user_id', currentUser.id);
+  const { data: memberships } = await sb.from('chat_group_members').select('group_id, chat_groups(id, name, creator_id)').eq('user_id', currentUser.id);
   if (!memberships || memberships.length === 0){
     $('groups-list').innerHTML = `<p style="color:var(--paper-dim);font-size:0.85rem">No groups yet.</p>`;
     return;
   }
   $('groups-list').innerHTML = memberships.map(m => `
-    <div class="search-result" data-group-id="${m.group_id}" data-wrapped-key="${escapeAttr(m.wrapped_key)}" style="cursor:pointer">
+    <div class="search-result" data-group-id="${m.group_id}" style="cursor:pointer">
       <div class="post-avatar">${initials(m.chat_groups?.name || '?')}</div>
       <div style="flex:1">${escapeHtml(m.chat_groups?.name || 'Group')}</div>
     </div>
   `).join('');
   document.querySelectorAll('#groups-list [data-group-id]').forEach(el => {
-    el.addEventListener('click', () => openGroupConversation(el.dataset.groupId, el.dataset.wrappedKey, el.querySelector('div:last-child').textContent));
+    el.addEventListener('click', () => openGroupConversation(el.dataset.groupId, null, el.querySelector('div:last-child').textContent));
   });
 }
 
 $('btn-new-group').addEventListener('click', async () => {
-  if (!currentUser || !myKeyHandle){ alert('Set up messaging first (open a 1-to-1 chat once).'); return; }
+  if (!currentUser){ alert('Log in first.'); return; }
   const groupName = prompt('Group name:');
   if (!groupName || !groupName.trim()) return;
   const usernamesRaw = prompt('Usernames to add, comma-separated (without @):');
@@ -3401,35 +3221,18 @@ $('btn-new-group').addEventListener('click', async () => {
   const usernames = usernamesRaw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (usernames.length === 0) return;
 
-  const { data: members } = await sb.from('profiles').select('id, username, public_key').in('username', usernames);
+  const { data: members } = await sb.from('profiles').select('id, username').in('username', usernames);
   const found = members || [];
   const missing = usernames.filter(u => !found.some(m => m.username.toLowerCase() === u));
   if (missing.length){
     if (!confirm(`Couldn't find: ${missing.join(', ')}. Create the group with just the rest?`)) return;
   }
-  const noKey = found.filter(m => !m.public_key);
-  const usable = found.filter(m => m.public_key);
-  if (noKey.length){
-    alert(`These users haven't set up messaging yet and will be skipped: ${noKey.map(m => m.username).join(', ')}`);
-  }
-
-  const { data: myProfile } = await sb.from('profiles').select('public_key').eq('id', currentUser.id).single();
-  if (!myProfile?.public_key){ alert('Set up your own messaging key first.'); return; }
-
-  // generate the group's AES key
-  const aesKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt']);
-  const rawAesKey = await crypto.subtle.exportKey('raw', aesKey);
 
   const { data: group, error: groupErr } = await sb.from('chat_groups').insert({ name: groupName.trim(), creator_id: currentUser.id }).select().single();
   if (groupErr){ alert('Could not create group.'); return; }
 
-  const allMembers = [...usable, { username: 'you', public_key: myProfile.public_key, id: currentUser.id }];
-  const memberRows = [];
-  for (const m of allMembers){
-    const pub = await importPublicKey(m.public_key);
-    const wrapped = await crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pub, rawAesKey);
-    memberRows.push({ group_id: group.id, user_id: m.id, wrapped_key: ab2b64(wrapped) });
-  }
+  const allMemberIds = [...found.map(m => m.id), currentUser.id];
+  const memberRows = allMemberIds.map(uid => ({ group_id: group.id, user_id: uid }));
   await sb.from('chat_group_members').insert(memberRows);
   await loadGroups();
   alert('Group created.');
@@ -3437,30 +3240,25 @@ $('btn-new-group').addEventListener('click', async () => {
 
 $('btn-back-group').addEventListener('click', () => { hide($('group-conversation-view')); show($('msg-conversations-list-wrap')); loadGroups(); });
 
-let currentGroupId = null, currentGroupAesKey = null;
+let currentGroupId = null;
 
-async function openGroupConversation(groupId, wrappedKeyB64, groupName){
+async function openGroupConversation(groupId, unusedArg, groupName){
   currentGroupId = groupId;
   hide($('msg-conversations-list-wrap'));
   show($('group-conversation-view'));
   $('group-name-header').textContent = groupName;
   $('group-messages').innerHTML = `<div class="skeleton" style="width:50%"></div>`;
 
-  const rawAesKey = await crypto.subtle.decrypt({ name: 'RSA-OAEP' }, myKeyHandle, b642ab(wrappedKeyB64));
-  currentGroupAesKey = await crypto.subtle.importKey('raw', rawAesKey, { name: 'AES-GCM' }, false, ['encrypt','decrypt']);
-
   const { data: rows } = await sb.from('group_messages').select('*, profiles!group_messages_sender_id_fkey(username, display_name)').eq('group_id', groupId).order('created_at', { ascending: true }).limit(200);
 
-  const decrypted = await Promise.all((rows || []).map(async r => {
-    try {
-      const plaintextBuf = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(b642ab(r.iv)) }, currentGroupAesKey, b642ab(r.ciphertext));
-      return { isSelf: r.sender_id === currentUser.id, sender: r.profiles?.display_name || r.profiles?.username || '?', text: new TextDecoder().decode(plaintextBuf), at: r.created_at };
-    } catch(e){
-      return { isSelf: false, sender: '?', text: '[Could not decrypt]', at: r.created_at };
-    }
+  const messages = (rows || []).map(r => ({
+    isSelf: r.sender_id === currentUser.id,
+    sender: r.profiles?.display_name || r.profiles?.username || '?',
+    text: r.content || '',
+    at: r.created_at
   }));
 
-  $('group-messages').innerHTML = decrypted.map(m => `
+  $('group-messages').innerHTML = messages.map(m => `
     <div style="text-align:${m.isSelf ? 'right' : 'left'};margin-bottom:8px">
       <div class="post-meta" style="margin-bottom:2px">${escapeHtml(m.sender)}</div>
       <span style="display:inline-block;background:${m.isSelf ? 'var(--marigold)' : 'var(--ink)'};color:${m.isSelf ? 'var(--ink)' : 'var(--paper)'};padding:8px 12px;border-radius:12px;max-width:80%;font-size:0.88rem">${escapeHtml(m.text)}</span>
@@ -3471,23 +3269,19 @@ async function openGroupConversation(groupId, wrappedKeyB64, groupName){
 }
 
 $('btn-send-group-message').addEventListener('click', async () => {
-  if (!currentGroupId || !currentGroupAesKey) return;
+  if (!currentGroupId) return;
   const input = $('group-compose-input');
   const text = input.value.trim();
   if (!text) return;
 
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, currentGroupAesKey, new TextEncoder().encode(text));
-
   const btn = $('btn-send-group-message'); btn.disabled = true;
   const { error } = await sb.from('group_messages').insert({
-    group_id: currentGroupId, sender_id: currentUser.id, ciphertext: ab2b64(ciphertext), iv: ab2b64(iv.buffer)
+    group_id: currentGroupId, sender_id: currentUser.id, content: text
   });
   btn.disabled = false;
   if (!error){
     input.value = '';
-    const { data: memberships } = await sb.from('chat_group_members').select('wrapped_key').eq('group_id', currentGroupId).eq('user_id', currentUser.id).single();
-    openGroupConversation(currentGroupId, memberships.wrapped_key, $('group-name-header').textContent);
+    openGroupConversation(currentGroupId, null, $('group-name-header').textContent);
   }
 });
 
@@ -3541,13 +3335,13 @@ async function openConversation(partnerId){
 
   if (error || !rows){ $('conv-messages').innerHTML = `<p class="msg msg-error">Couldn't load messages.</p>`; return; }
 
-  const decrypted = await Promise.all(rows.map(async r => {
-    const isSender = r.sender_id === currentUser.id;
-    const text = await decryptMessage(r, myKeyHandle, isSender);
-    return { isSender, text, at: r.created_at };
+  const messages = rows.map(r => ({
+    isSender: r.sender_id === currentUser.id,
+    text: r.content || (r.ciphertext ? '[An older message from before this chat was upgraded — not readable anymore]' : ''),
+    at: r.created_at
   }));
 
-  $('conv-messages').innerHTML = decrypted.map(m => `
+  $('conv-messages').innerHTML = messages.map(m => `
     <div style="text-align:${m.isSender ? 'right' : 'left'};margin-bottom:8px">
       <span style="display:inline-block;background:${m.isSender ? 'var(--marigold)' : 'var(--ink)'};color:${m.isSender ? 'var(--ink)' : 'var(--paper)'};padding:8px 12px;border-radius:12px;max-width:80%;font-size:0.88rem">${escapeHtml(m.text)}</span>
       <div class="post-meta">${timeAgo(m.at)}</div>
@@ -3560,21 +3354,14 @@ async function openConversation(partnerId){
 $('btn-back-messages').addEventListener('click', () => { currentConversationPartner = null; loadConversations(); hide($('msg-conversation-view')); show($('msg-conversations-list-wrap')); });
 
 $('btn-send-message').addEventListener('click', async () => {
-  if (!currentConversationPartner || !myKeyHandle) return;
+  if (!currentConversationPartner) return;
   const input = $('msg-compose-input');
   const text = input.value.trim();
   if (!text) return;
 
-  const { data: recipientProfile } = await sb.from('profiles').select('public_key').eq('id', currentConversationPartner).single();
-  const { data: myProfile } = await sb.from('profiles').select('public_key').eq('id', currentUser.id).single();
-  if (!recipientProfile?.public_key){
-    alert('This person hasn\'t set up messaging yet.'); return;
-  }
-
   const btn = $('btn-send-message'); btn.disabled = true;
-  const enc = await encryptMessage(text, recipientProfile.public_key, myProfile.public_key);
   const { error } = await sb.from('messages_metadata').insert({
-    sender_id: currentUser.id, recipient_id: currentConversationPartner, ...enc
+    sender_id: currentUser.id, recipient_id: currentConversationPartner, content: text
   });
   btn.disabled = false;
 

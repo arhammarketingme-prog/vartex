@@ -960,3 +960,45 @@ opened on any device without a local key, it'll go through the "set up
 your message passphrase" flow as if for the first time, same as a brand
 new account. That's expected, not a bug — there was nothing to back up
 before now.
+
+## Phase 27 — messages simplified, per explicit request: no more passphrase
+
+Removes Phase 21's passphrase system entirely. Messages now work exactly
+like you asked — log in anywhere, see your messages immediately, no
+extra step, ever. Run `supabase/schema_phase22.sql` after phase 21. Only
+`index.html` changed besides that.
+
+**What changed under the hood**: messages are no longer encrypted in the
+browser before being sent. They're stored as regular text, protected the
+same way as everything else private in this app — Row Level Security
+that only lets the sender and recipient ever retrieve a given message.
+Group chat works the same way now too, and creating a group no longer
+requires anyone to "have set up messaging" first, since there's no key to
+set up anymore.
+
+**The Privacy Center has been rewritten to match reality** — it now
+plainly states messages are not end-to-end encrypted, explains what
+*does* protect them (access control, not encryption) and who could
+technically still read them (someone with direct database access). This
+was important to get right rather than leave outdated claims sitting
+there.
+
+**Why this was the right call once you'd made the trade-off explicit**:
+you're right that WhatsApp/Instagram/Facebook's everyday chats don't ask
+for a passphrase, and the reason is exactly what Phase 26 explained then
+— they don't offer that same "we truly cannot read this" guarantee on
+regular chats either (WhatsApp's default chats *are* E2E, but linking a
+new device still involves a QR-scan step for exactly this reason; standard
+Instagram/Messenger chats generally aren't E2E at all). There's no version
+of this that has zero friction ever AND is genuinely unreadable by the
+server — you can only pick one. You picked "works everywhere, no
+friction," which is a completely reasonable product decision — it just
+needed to be paired with telling people the truth about what is and isn't
+encrypted, which the Privacy Center now does.
+
+**Old messages from Phase 21's E2E system** show as a plain note
+("an older message from before this chat was upgraded") rather than the
+technical "[Could not decrypt]" text, since they genuinely can't be
+recovered (their content only ever existed in encrypted form, and that
+encryption is exactly what's being removed) — this is expected for your
+existing test conversations, not a bug.
